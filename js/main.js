@@ -58,12 +58,65 @@ class GoodsList {
         this.container.innerHTML = listHtml;
         this.initListeners();
     }
+    totalPrice(){
+        let totalPrice = 0;
+        this.goods.forEach(good=>{
+            totalPrice += good.price;
+        })
+        return totalPrice;
+    }
 }
 
 const list = new GoodsList('.goods-list');
 list.fetchGoods();
 list.render();
+console.log("total price " + list.totalPrice())
+///
 
+class CartItem extends GoodsItem {
+    count = 0;
+
+    renderCartFly(){
+
+    }
+
+    renderCartPage(){
+
+    }
+}
+
+class Cart{
+    items = [];
+    containerCartFly = "";
+
+
+    constructor() {
+
+    }
+
+    addItem(){
+
+    }
+
+    deleteItem(){
+
+    }
+
+    totalPrice(){
+
+    }
+
+    totalCount(){
+
+    }
+
+    renderItemsFlyBlock(){
+
+    }
+
+}
+
+///
 
 
 // const goods = [
