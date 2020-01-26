@@ -1,29 +1,22 @@
 const API_URL = "https://raw.githubusercontent.com/GeekBrainsTutorial/online-store-api/master/responses";
-const makeGetRequest = (url) => {
-    return new Promise((resolve, reject) => {
-        let xhr;
-        if (window.XMLHttpRequest) {
-            xhr = new window.XMLHttpRequest();
-        } else  {
-            xhr = new window.ActiveXObject("Microsoft.XMLHTTP")
-        }
-            
-        if(url){
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4) {
-                    resolve(xhr.responseText)
-    
-                }
-            };
-            xhr.open('GET', url);
-            xhr.send();
-        }else{
-            reject("Error")
-        }
+function makeGetRequest(url, callback) {
+    let xhr;
+    if (window.XMLHttpRequest) {
+        xhr = new window.XMLHttpRequest();
+    } else  {
+        xhr = new window.ActiveXObject("Microsoft.XMLHTTP")
+    }
 
-    })
-};
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            callback(xhr.responseText)
 
+        }
+    };
+
+    xhr.open('GET', url);
+    xhr.send();
+}
 
 class GoodsItem {
     constructor(id, title = 'Без названия', price = 0, img = 'https://via.placeholder.com/250') {
@@ -34,14 +27,12 @@ class GoodsItem {
     }
     render() {
         return `
-        <div class="goods-item" data-id="${this.id}">
-            <div class="pImage">
+            <div class="goods-item" data-id="${this.id}">
                 <img src="${this.img}" alt="alt">
+                <h3>${this.title}</h3>
+                <p>${this.price}</p>
+                <button class="js-add-to-cart">Добавить</button>
             </div>
-            <h3>${this.title}</h3>
-            <p class="price">${this.price}</p>
-            <button name="btn-buy"  class="js-add-to-cart btn-buy">Добавить</button>
-        </div>
         `;
     }
 }
@@ -92,10 +83,10 @@ class GoodsPage extends GoodsList {
         })
     }
     fetchGoods(callback) {
-        makeGetRequest(`${API_URL}/catalogData.json`).then((goods) => {
+        makeGetRequest(`${API_URL}/catalogData.json`, (goods) => {
             this.goods = JSON.parse(goods);
             callback();
-        }).catch(e => console.error(e));
+        })
     }
     addToCart(goodId) {
         const good = this.findGood(goodId);

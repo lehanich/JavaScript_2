@@ -1,0 +1,12 @@
+{
+  "foo": "test",
+  "num": 1,
+  "bol": true,
+  "arr": [],
+  "obj": {
+    "foo": "test",
+    "num": 1,
+    "bol": true,
+    "arr": []
+  }
+}
