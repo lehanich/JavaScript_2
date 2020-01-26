@@ -53,7 +53,7 @@ class GoodsList {
     }
     initListeners() {}
     findGood(id) {
-        return this.goods.find(good => good.id === id);
+        return this.goods.find(good => good.id_product === id);
     }
     fetchGoods() {}
     totalSum() {
@@ -73,7 +73,7 @@ class GoodsList {
     render() {
         let listHtml = '';
         this.goods.forEach(good => {
-            const goodItem = new GoodsItem(good.id, good.product_name, good.price, good.img);
+            const goodItem = new GoodsItem(good.id_product, good.product_name, good.price, good.img);
             listHtml += goodItem.render();
         });
         this.container.innerHTML = listHtml;
@@ -87,9 +87,11 @@ class GoodsPage extends GoodsList {
         buttons.forEach(button => {
             button.addEventListener('click', (event) => {
                 const goodId = event.target.parentElement.getAttribute('data-id');
+                console.log(goodId)
                 this.addToCart(parseInt(goodId, 10));
             })
         })
+        console.log("check init listeners in GoodsList")
     }
     fetchGoods(callback) {
         makeGetRequest(`${API_URL}/catalogData.json`).then((goods) => {
@@ -100,33 +102,145 @@ class GoodsPage extends GoodsList {
     addToCart(goodId) {
         const good = this.findGood(goodId);
         console.log(good);
+        cart.addItem(good);
     }
 }
 
 class Cart extends GoodsList {
-    removeFromCart(goodId) {
+    // constructor(...attrs) {
+    //     super(attrs);
+    //     this.count = 0;
+    // }
+    constructor(container, containerList) {
+        super()
+        this.goods = []
+        this.container = document.querySelector(container);//!!! super() не сработал, пришлось повторно определять
+        this.containerList = document.querySelector(containerList);
+        this.containerVal = container;
+        this.initListeners()
+        //console.log(this.container)
+    }
+    initListeners(){
+        this.container.addEventListener("click", (event)=>{
+            console.log(event.target.name)
+            if(event.target.name === "cart-button"){
+                
+                this.containerList.classList.contains("show")?
+                  this.containerList.classList.remove("show") :
+                    this.containerList.classList.add("show")
 
+                document.querySelector(this.containerVal + " .total-price").classList.contains("hide")?
+                  document.querySelector(this.containerVal + " .total-price").classList.remove("hide") :
+                    document.querySelector(this.containerVal + " .total-price").classList.add("hide")
+            }
+        })
+        this.containerList.addEventListener("click", (event)=>{
+            if(event.target.name === "cart-button"){
+                console.log("click button")
+                this.containerList.classList.contains("show")?
+                  this.containerList.classList.remove("show") :
+                    this.containerList.classList.add("show")
+
+                document.querySelector(this.containerVal + " .total-price").classList.contains("hide")?
+                  document.querySelector(this.containerVal + " .total-price").classList.remove("hide") :
+                    document.querySelector(this.containerVal + " .total-price").classList.add("hide")
+            }
+            if(event.target.name === "btn-del"){ //!!! почему срабатывает 2 раза?
+                console.log(event.target.dataset.product)
+                this.removeFromCart(event.target.dataset.product)
+            }
+        })
+    }
+    removeFromCart(goodId) {
+        console.dir(this.goods);
+        let findId = this.goods.findIndex(good => good.id == goodId);
+        if(findId >=0 ){
+            this.goods.splice(findId, 1);
+        }
+        //console.log(goodId);
+        console.log(findId);
+        console.dir(this.goods);
+        this.render()
+        
     }
     cleanCart() {
 
     }
     updateCartItem(goodId, goods) {
+        
+    }
+    addItem(element){
+        let cartItem = new CartItem(element.id_product,element.product_name,element.price,'https://via.placeholder.com/50');
+        let findId = this.goods.findIndex(good => good.id === cartItem.id);
+        console.log(findId)
+        if(findId<0){
+            findId = this.goods.push(cartItem)
+            findId--
+        }
+        this.goods[findId].count ++
+        console.log(this.goods)
+        this.render()
+    }
+    totalPrice(){
+        let totalPrice = 0;
+        this.goods.forEach(good => {
+            totalPrice += good.price * good.count
+        })
+        return totalPrice;
+    }
+    render() {
+        let listHtml = '';
+        this.goods.forEach(good => {
+            const goodItem = new CartItem(good.id, good.title, good.price, good.img);
+            goodItem.incCount( good.count)
+            listHtml += goodItem.render();
+        });
+        listHtml += `
+            <div class="total-price-fly">
+                <span>Итоговая сумма</span>
+                <span class="price">${this.totalPrice()}</span>
+            </div>
+        `
+        this.containerList.innerHTML = listHtml;
+        document.querySelector(this.containerVal + " .total-price").innerHTML = this.totalPrice()
+
+        this.initListeners();
 
     }
 }
 
 class CartItem extends GoodsItem {
     constructor(...attrs) {
-        super(attrs);
+        super(...attrs);
         this.count = 0;
     }
-    incCount() {
-
+    incCount(count) {
+        (count) ? this.count = count : this.count ++ 
     }
     decCount() {
-
+        (this.count > 0) ? this.count -- : this.count
+    }
+    render(){
+        return  `
+            <div class="cart-item">
+                <div class="cart-image">
+                    <img  src="${this.img}" alt="${this.title}">
+                </div>
+                <div class="cart-info">
+                    <span class="cart-info-name">${this.title}</span>
+                    <i>${this.price}</i> x 
+                    <i>${this.count}</i>шт
+                </div>
+                <input type="button" class="btn-del" name="btn-del" data-product="${this.id}" value="Del">
+                <!--<div class="catalog-link">
+                    <a href="catalog/product1.html">Бумага</a>
+                </div>-->
+            </div>
+        `
     }
 }
+
+let cart = new Cart('.cart-form', '.cart-block');
 
 const list = new GoodsPage('.goods-list');
 list.fetchGoods(() => {
