@@ -55,7 +55,21 @@ class GoodsList {
     findGood(id) {
         return this.goods.find(good => good.id_product === id);
     }
-    fetchGoods() {}
+    fetchGoods() {
+        // return new Promise((resolve, reject) => {
+        //     if(this.goods){
+        //         let listHtml = '';
+        //         this.goods.forEach(good => {
+        //             const goodItem = new GoodsItem(good.id_product, good.product_name, good.price, good.img);
+        //             listHtml += goodItem.render();
+        //         });
+        //         resolve(this.goods)
+        //     }else{
+        //         reject("Error")
+        //     }
+    
+        // })
+    }
     totalSum() {
         let sum = 0;
         for (const good of this.goods) {
@@ -78,7 +92,13 @@ class GoodsList {
         });
         this.container.innerHTML = listHtml;
         this.initListeners();
+        
+        // this.fetchGoods(this.goods).then((listHtml) => {
+        //     this.container.innerHTML = listHtml;
+        //     this.initListeners();
+        // }).catch(e => console.error(e));
     }
+    
 }
 
 class GoodsPage extends GoodsList {
@@ -124,7 +144,9 @@ class Cart extends GoodsList {
         this.container.addEventListener("click", (event)=>{
             console.log(event.target.name)
             if(event.target.name === "cart-button"){
-                
+                console.log(event.target.name)
+                //!!! после удаления всех товаров не скрывается 
+
                 this.containerList.classList.contains("show")?
                   this.containerList.classList.remove("show") :
                     this.containerList.classList.add("show")
