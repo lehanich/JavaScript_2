@@ -1,4 +1,7 @@
 const API_URL = "https://raw.githubusercontent.com/GeekBrainsTutorial/online-store-api/master/responses";
+
+const goodsInCart = []
+
 const makeGetRequest = (url) => {
     return new Promise((resolve, reject) => {
         let xhr;
@@ -8,18 +11,22 @@ const makeGetRequest = (url) => {
             xhr = new window.ActiveXObject("Microsoft.XMLHTTP")
         }
             
-        if(url){
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4) {
-                    resolve(xhr.responseText)
-    
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status !== 200){
+                    reject(xhr.responceText)
                 }
-            };
-            xhr.open('GET', url);
-            xhr.send();
-        }else{
-            reject("Error")
+            
+                const body = JSON.parse(xhr.responseText)
+                resolve(body)
+    
+            }
+        };
+        xhr.onerror = function(err){
+            reject(err)
         }
+        xhr.open('GET', url);
+        xhr.send();
 
     })
 };
@@ -56,19 +63,7 @@ class GoodsList {
         return this.goods.find(good => good.id_product === id);
     }
     fetchGoods() {
-        // return new Promise((resolve, reject) => {
-        //     if(this.goods){
-        //         let listHtml = '';
-        //         this.goods.forEach(good => {
-        //             const goodItem = new GoodsItem(good.id_product, good.product_name, good.price, good.img);
-        //             listHtml += goodItem.render();
-        //         });
-        //         resolve(this.goods)
-        //     }else{
-        //         reject("Error")
-        //     }
-    
-        // })
+
     }
     totalSum() {
         let sum = 0;
@@ -93,10 +88,6 @@ class GoodsList {
         this.container.innerHTML = listHtml;
         this.initListeners();
         
-        // this.fetchGoods(this.goods).then((listHtml) => {
-        //     this.container.innerHTML = listHtml;
-        //     this.initListeners();
-        // }).catch(e => console.error(e));
     }
     
 }
@@ -114,9 +105,14 @@ class GoodsPage extends GoodsList {
         console.log("check init listeners in GoodsList")
     }
     fetchGoods(callback) {
-        makeGetRequest(`${API_URL}/catalogData.json`).then((goods) => {
-            this.goods = JSON.parse(goods);
-            callback();
+        // try{
+        //     this.goods = await makeGetRequest(`${API_URL}/catalogData.json`) //async makeGetRequest
+        // }catch(e){
+        //     console.error(e)
+        // }
+        return makeGetRequest(`${API_URL}/catalogData.json`).then((goods) => {
+            this.goods = goods;
+            //callback();
         }).catch(e => console.error(e));
     }
     addToCart(goodId) {
@@ -132,40 +128,29 @@ class Cart extends GoodsList {
     //     this.count = 0;
     // }
     constructor(container, containerList) {
-        super()
-        this.goods = []
-        this.container = document.querySelector(container);//!!! super() не сработал, пришлось повторно определять
+        super(container)
+        //this.goods = []
+        //this.container = document.querySelector(container);//!!! super() не сработал, пришлось повторно определять
         this.containerList = document.querySelector(containerList);
         this.containerVal = container;
         this.initListeners()
-        //console.log(this.container)
+        console.log(this.container)
     }
     initListeners(){
         this.container.addEventListener("click", (event)=>{
-            console.log(event.target.name)
+            //console.log(event.target.name)
             if(event.target.name === "cart-button"){
                 console.log(event.target.name)
-                //!!! после удаления всех товаров не скрывается 
-
-                this.containerList.classList.contains("show")?
-                  this.containerList.classList.remove("show") :
-                    this.containerList.classList.add("show")
-
-                document.querySelector(this.containerVal + " .total-price").classList.contains("hide")?
-                  document.querySelector(this.containerVal + " .total-price").classList.remove("hide") :
-                    document.querySelector(this.containerVal + " .total-price").classList.add("hide")
+                this.containerList.classList.toggle("show")
+                document.querySelector(this.containerVal + " .total-price").classList.toggle("hide")
             }
         })
         this.containerList.addEventListener("click", (event)=>{
             if(event.target.name === "cart-button"){
                 console.log("click button")
-                this.containerList.classList.contains("show")?
-                  this.containerList.classList.remove("show") :
-                    this.containerList.classList.add("show")
+                this.containerList.classList.toggle("show")
+                document.querySelector(this.containerVal + " .total-price").classList.toggle("hide")
 
-                document.querySelector(this.containerVal + " .total-price").classList.contains("hide")?
-                  document.querySelector(this.containerVal + " .total-price").classList.remove("hide") :
-                    document.querySelector(this.containerVal + " .total-price").classList.add("hide")
             }
             if(event.target.name === "btn-del"){ //!!! почему срабатывает 2 раза?
                 console.log(event.target.dataset.product)
@@ -174,14 +159,14 @@ class Cart extends GoodsList {
         })
     }
     removeFromCart(goodId) {
-        console.dir(this.goods);
-        let findId = this.goods.findIndex(good => good.id == goodId);
+        console.dir(goodsInCart);
+        let findId = goodsInCart.findIndex(good => good.id == goodId);
         if(findId >=0 ){
-            this.goods.splice(findId, 1);
+            goodsInCart.splice(findId, 1);
         }
         //console.log(goodId);
         console.log(findId);
-        console.dir(this.goods);
+        console.dir(goodsInCart);
         this.render()
         
     }
@@ -193,26 +178,26 @@ class Cart extends GoodsList {
     }
     addItem(element){
         let cartItem = new CartItem(element.id_product,element.product_name,element.price,'https://via.placeholder.com/50');
-        let findId = this.goods.findIndex(good => good.id === cartItem.id);
+        let findId = goodsInCart.findIndex(good => good.id === cartItem.id);
         console.log(findId)
         if(findId<0){
-            findId = this.goods.push(cartItem)
+            findId = goodsInCart.push(cartItem)
             findId--
         }
-        this.goods[findId].count ++
-        console.log(this.goods)
+        goodsInCart[findId].count ++
+        console.log(goodsInCart)
         this.render()
     }
     totalPrice(){
         let totalPrice = 0;
-        this.goods.forEach(good => {
+        goodsInCart.forEach(good => {
             totalPrice += good.price * good.count
         })
         return totalPrice;
     }
     render() {
         let listHtml = '';
-        this.goods.forEach(good => {
+        goodsInCart.forEach(good => {
             const goodItem = new CartItem(good.id, good.title, good.price, good.img);
             goodItem.incCount( good.count)
             listHtml += goodItem.render();
@@ -225,8 +210,6 @@ class Cart extends GoodsList {
         `
         this.containerList.innerHTML = listHtml;
         document.querySelector(this.containerVal + " .total-price").innerHTML = this.totalPrice()
-
-        this.initListeners();
 
     }
 }
@@ -265,8 +248,14 @@ class CartItem extends GoodsItem {
 let cart = new Cart('.cart-form', '.cart-block');
 
 const list = new GoodsPage('.goods-list');
-list.fetchGoods(() => {
+list.fetchGoods().then(() => {
     list.render();
-});
+}).catch((err) => {
+    console.error(err)
+})
+
+// => {
+//     list.render();
+// });
 
 console.log(list.totalSum());
