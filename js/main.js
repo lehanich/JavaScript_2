@@ -64,7 +64,10 @@ class GoodsList {
     }
     initListeners() {}
     findGood(id) {
-        return this.goods.find(good => good.id_product === id);
+        //console.log(this.goods)
+        //console.log(this.filteredGoods)
+        //return this.goods.find(good => good.id_product === id);
+        return this.goods[id]
     }
     fetchGoods() {
 
@@ -89,6 +92,7 @@ class GoodsList {
             const goodItem = new GoodsItem(index, good.product_name, good.price, good.img);
             listHtml += goodItem.render();
         });
+        console.log(this.filteredGoods)
         this.container.innerHTML = listHtml;
         this.initListeners();
         
@@ -250,6 +254,7 @@ class Cart extends GoodsList {
 class CartItem extends GoodsItem {
     constructor(...attrs) {
         super(...attrs);
+        console.log(this.id)
         this.count = 0;
     }
     incCount(count) {
