@@ -57,10 +57,17 @@ class GoodsList {
     constructor(container) {
         this.container = document.querySelector(container);
         this.goods = [];
+        this.filteredGoods = [];
+        this.initCommonListeners();
+    }
+    initCommonListeners(){
     }
     initListeners() {}
     findGood(id) {
-        return this.goods.find(good => good.id_product === id);
+        //console.log(this.goods)
+        //console.log(this.filteredGoods)
+        //return this.goods.find(good => good.id_product === id);
+        return this.goods[id]
     }
     fetchGoods() {
 
@@ -81,10 +88,11 @@ class GoodsList {
     }
     render() {
         let listHtml = '';
-        this.goods.forEach(good => {
-            const goodItem = new GoodsItem(good.id_product, good.product_name, good.price, good.img);
+        this.filteredGoods.forEach((good, index) => {
+            const goodItem = new GoodsItem(index, good.product_name, good.price, good.img);
             listHtml += goodItem.render();
         });
+        console.log(this.filteredGoods)
         this.container.innerHTML = listHtml;
         this.initListeners();
         
@@ -93,6 +101,25 @@ class GoodsList {
 }
 
 class GoodsPage extends GoodsList {
+    initCommonListeners(){
+        const searchForm = document.querySelector('#searchForm');
+        const searchValue = searchForm.querySelector('.search-button');
+        // searchValue.addEventListener('search', (e) => {
+        //     console.log("Serch 22")
+        //     e.preventDefault();
+        //     let value = searchValue.value;
+        //     value = value.trim();
+        //     this.filterGoods(value);
+        // });
+        searchForm.addEventListener('submit', (e) => {
+                console.log("Serch 22")
+                e.preventDefault();
+                let value = searchValue.value;
+                value = value.trim();
+                this.filterGoods(value);
+            });
+
+    }
     initListeners() {
         const buttons = [...this.container.querySelectorAll('.js-add-to-cart')];
         buttons.forEach(button => {
@@ -102,16 +129,26 @@ class GoodsPage extends GoodsList {
                 this.addToCart(parseInt(goodId, 10));
             })
         })
+
         console.log("check init listeners in GoodsList")
     }
+    filterGoods(value) {
+        const regexp = new RegExp(value, 'i');
+        this.filteredGoods = this.goods.filter((good) => {
+            return regexp.test(good.product_name);
+        });
+        this.render();
+    }
     fetchGoods(callback) {
-        // try{
-        //     this.goods = await makeGetRequest(`${API_URL}/catalogData.json`) //async makeGetRequest
-        // }catch(e){
-        //     console.error(e)
+        // try {
+        //     this.goods = await makeGetRequest(`${API_URL}/catalogData.json`);
+        //     this.filteredGoods = [...this.goods];
+        // } catch (e) {
+        //     console.error(`Ошибка: ${e}`)
         // }
         return makeGetRequest(`${API_URL}/catalogData.json`).then((goods) => {
             this.goods = goods;
+            this.filteredGoods = [...this.goods];
             //callback();
         }).catch(e => console.error(e));
     }
@@ -217,6 +254,7 @@ class Cart extends GoodsList {
 class CartItem extends GoodsItem {
     constructor(...attrs) {
         super(...attrs);
+        console.log(this.id)
         this.count = 0;
     }
     incCount(count) {
