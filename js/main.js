@@ -58,6 +58,7 @@ class GoodsList {
         this.container = document.querySelector(container);
         this.goods = [];
         this.filteredGoods = [];
+        this.emptyText = "Нет данных";
         this.initCommonListeners();
     }
     initCommonListeners(){
@@ -93,7 +94,8 @@ class GoodsList {
             listHtml += goodItem.render();
         });
         console.log(this.filteredGoods)
-        this.container.innerHTML = listHtml;
+
+        this.container.innerHTML = this.filteredGoods.length > 0 ? listHtml : this.emptyText;
         this.initListeners();
         
     }
@@ -189,7 +191,7 @@ class Cart extends GoodsList {
                 document.querySelector(this.containerVal + " .total-price").classList.toggle("hide")
 
             }
-            if(event.target.name === "btn-del"){ //!!! почему срабатывает 2 раза?
+            if(event.target.name === "btn-del"){ 
                 console.log(event.target.dataset.product)
                 this.removeFromCart(event.target.dataset.product)
             }
