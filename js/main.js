@@ -58,6 +58,8 @@ class GoodsList {
         this.container = document.querySelector(container);
         this.goods = [];
         this.filteredGoods = [];
+        this.serchLine = "";
+        this.emptyText = "Нет данных";
         this.initCommonListeners();
     }
     initCommonListeners(){
@@ -93,7 +95,8 @@ class GoodsList {
             listHtml += goodItem.render();
         });
         console.log(this.filteredGoods)
-        this.container.innerHTML = listHtml;
+
+        this.container.innerHTML = this.filteredGoods.length > 0 ? listHtml : this.emptyText;
         this.initListeners();
         
     }
@@ -112,10 +115,11 @@ class GoodsPage extends GoodsList {
         //     this.filterGoods(value);
         // });
         searchForm.addEventListener('submit', (e) => {
-                console.log("Serch 22")
                 e.preventDefault();
                 let value = searchValue.value;
                 value = value.trim();
+                this.serchLine = value;
+                console.log("Search line: " + this.serchLine)
                 this.filterGoods(value);
             });
 
@@ -170,6 +174,7 @@ class Cart extends GoodsList {
         //this.container = document.querySelector(container);//!!! super() не сработал, пришлось повторно определять
         this.containerList = document.querySelector(containerList);
         this.containerVal = container;
+        this.isVisibleCart = false;
         this.initListeners()
         console.log(this.container)
     }
@@ -180,6 +185,8 @@ class Cart extends GoodsList {
                 console.log(event.target.name)
                 this.containerList.classList.toggle("show")
                 document.querySelector(this.containerVal + " .total-price").classList.toggle("hide")
+                this.isVisibleCart = this.isVisibleCart === false ? true : this.isVisibleCart === true ? false : false ;
+                console.log("Cart visible: " + this.isVisibleCart)
             }
         })
         this.containerList.addEventListener("click", (event)=>{
@@ -189,7 +196,7 @@ class Cart extends GoodsList {
                 document.querySelector(this.containerVal + " .total-price").classList.toggle("hide")
 
             }
-            if(event.target.name === "btn-del"){ //!!! почему срабатывает 2 раза?
+            if(event.target.name === "btn-del"){ 
                 console.log(event.target.dataset.product)
                 this.removeFromCart(event.target.dataset.product)
             }
