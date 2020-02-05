@@ -10,23 +10,43 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<header class="container">
-    <img class="logo" src="https://via.placeholder.com/200x70" alt="logo">
-    <ul class="menu">
-        <li><a href="#">Каталог</a></li>
-        <li><a href="#">Контакты</a></li>
-   </ul>
-    <div class="header-icons">
-        <form id="searchForm" action=""><input type="search" class="search-button"></form>
-        <form id="cart-form" class="cart-form" action=""><input type="button" name="cart-button" class="cart-button"><span class="total-price">0</span><div class="cart-block"></div></form>
-    </div>
-</header>
-<main class="container">
-    <div class="goods-list"></div>
-</main>
-<footer class="container">
+<div id="app">
+    <!--{{ searchLineTest }}-->
+    <!-- <input type="text" v-model="name"/>
+     v-if="name.length !== 0"
+    
+        v-for="name in names" v-on:click="clickHandler" или @click="clickHandler($event, name)"
+           {{name}}
+     -->
+    <header class="container">
+        <img class="logo" src="https://via.placeholder.com/200x70" alt="logo">
+        <ul class="menu">
+            <li><a href="#">Каталог</a></li>
+            <li><a href="#">Контакты</a></li>
+    </ul>
+        <div class="header-icons" >
+            <!--@submit.prevent="filterGoods"-->
+            <form id="searchForm" action=""><input type="search" class="search-button" @input="filteredGoodsHandler" v-model.trim="searchLine"></form>
+            <form id="cart-form" class="cart-form" action=""><input type="button" name="cart-button" class="cart-button"><span class="total-price">0</span><div class="cart-block"></div></form>
+        </div>
+    </header>
+    <main class="container">
+        <div class="goods-list" >
+            <div class="goods-item" v-for="good in filteredGoods" :key="good.product_name" :data-id="good.id_product" >
+                <div class="pImage">
+                    <img src="https://via.placeholder.com/250" alt="alt">
+                </div>
+                <h3>{{ good.product_name }}</h3>
+                <p class="price">{{ good.price }}</p>
+                <button name="btn-buy" :data-id="good.id_product"  class="js-add-to-cart btn-buy">Добавить</button>
+            </div>
+        </div>
+    </main>
+    <footer class="container">
 
-</footer>
+    </footer>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
