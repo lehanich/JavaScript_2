@@ -90,6 +90,16 @@ Vue.component('cart-form', {
     `
 })
 
+Vue.component('alert-window', {
+    props: {
+        message: "",
+        isVisible: false,
+    },
+    template:`
+        <div class="allertMessage">Ошибка: <slot></slot></div>
+    `
+})
+
 const app = new Vue({
     el: '#app',
     data: {
@@ -97,6 +107,7 @@ const app = new Vue({
         filteredGoods: [],
         searchLine: '',
         isVisibleCart: false,
+        msgError: '',
     },
     computed: {
         filteredGoodsHandler(){
@@ -110,20 +121,12 @@ const app = new Vue({
                     return regexp.test(good.product_name);
                 });
             },300)
+        },
+        visibleError(){
+            return this.msgError.length !== 0
         }
     },
     methods: {
-        // filteredGoodsHandler(){
-        //     return debounce((event)=>{
-        //         const regexp = new RegExp(event.target.value.trim(), 'i');
-        //         console.log(this.searchLine)
-        //         this.filteredGoods = this.goods.filter((good) => {
-        //             return regexp.test(good.product_name);
-        //         });
-        //     },300)
-
-            
-        // },
         makeGetRequest(url) {
             return new Promise((resolve, reject) => {
                 let xhr;
@@ -157,19 +160,24 @@ const app = new Vue({
                 this.goods = await this.makeGetRequest(`${API_URL}/catalogData.json`) //async makeGetRequest
                 this.filteredGoods = [...this.goods]
             }catch(e){
-                console.error(e)
+                //console.error(e)
+                this.showError("Нет соединения с сервером")
             }
-            // return makeGetRequest(`${API_URL}/catalogData.json`).then((goods) => {
-            //     this.goods = goods;
-            //     //callback();
-            // }).catch(e => console.error(e));
+
         },
-        // filterGoods() {
-        //     const regexp = new RegExp(this.searchLine, 'i');
-        //     this.filteredGoods = this.goods.filter((good) => {
-        //         return regexp.test(good.product_name);
-        //     });
-        // }
+        showError(){
+            this.msgError = "Нет соединения с сервером"
+
+            //  debounce(()=>{
+            //     console.log("test")
+            //     this.msgError = ""
+            //     console.log(this.msgError)
+            // }, 3000)
+            // console.log(this.msgError)
+            // console.log(test)
+            
+            setTimeout(() => this.msgError = "" , 3000);
+        }
         
     },
     mounted() { //приложение монтируется

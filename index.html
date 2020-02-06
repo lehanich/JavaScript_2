@@ -35,6 +35,9 @@
     <footer class="container">
 
     </footer>
+    <transition name="fade">
+        <alert-window v-if="visibleError">{{ msgError }}</alert-window>
+    </transition>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 <script src="js/main.js"></script>

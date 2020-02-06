@@ -300,3 +300,15 @@ footer {
 .goods-not-found{
     text-align: center;
 }
+.allertMessage{
+    display: block;
+    text-align: center;
+    color: #fff;
+    position: absolute;
+    background-color: #f1453c;
+    padding:20px;
+    width: 400px;
+    left:0;
+    top:0;
+
+}
