@@ -82,6 +82,7 @@ Vue.component('search-form', {
     `
 })
 
+
 Vue.component('cart-form', {
     props: [`goods`],
     data:()=>({
@@ -197,4 +198,5 @@ const app = new Vue({
             return this.currentName.toUpperCase()
         }
     }
+
 })
