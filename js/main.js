@@ -19,18 +19,48 @@ function debounce(callback,wait, immediate){
     }
 }
 
-const app = new Vue({
-    el: '#app',
-    data: {
-        goods: [],
-        filteredGoods: [],
-        searchLine: '',
-        searchLineTest: '',
-        isVisibleCart: false,
+Vue.component('goods-item', {
+    props: ['good'],
+    template: `
+        <div class="goods-item"  >
+                <div class="pImage">
+                    <img src="https://via.placeholder.com/250" alt="alt">
+                </div>
+                <h3>{{ good.product_name }}</h3>
+                <p class="price">{{ good.price }}</p>
+                <button name="btn-buy" :data-id="good.id_product"  class="js-add-to-cart btn-buy">Добавить</button>
+        </div>
+    `
+});
+
+Vue.component('goods-list', {
+    props: [`goods`],
+    computed: {
+        isFilteredGoodsEmpty() {
+            return this.goods.length === 0;
+        },
     },
-    computed:{
-        searchLineTest: function(){
-            return searchLine + " test"
+    template:`
+        <div class="goods-list" >
+            <goods-item v-for="good in goods" :key="good.id_product" :data-id="good.id_product" :good="good"></goods-item>
+        
+            <div class="goods-not-found" v-if="isFilteredGoodsEmpty" >
+                <h3>Нет данных</h3>
+            </div>
+        </div>
+        
+    `
+});
+
+Vue.component('search-form', {
+    props: [`goods`],
+    data:()=>({
+        searchLine: '',
+
+    }),
+    computed: {
+        searchLineTest(){
+            return this.searchLine + " test"
         },
         filteredGoodsHandler(){
             // return  this.goods.filter((good) => {
@@ -38,14 +68,65 @@ const app = new Vue({
             //     });
             return debounce((event)=>{
                 const regexp = new RegExp(event.target.value.trim(), 'i');
-                console.log(this.searchLine)
+                console.dir(event.target.value)
                 this.filteredGoods = this.goods.filter((good) => {
                     return regexp.test(good.product_name);
                 });
             },300)
-            
+        }
+    },
+    template:`
+        <form id="searchForm" action=""><!-- Test Computed <h2>{{ searchLineTest }}</h2>-->
+                <input type="search" class="search-button" @input="filteredGoodsHandler" >
+        </form><!--@input="filteredGoodsHandler" v-model.trim="searchLine" -->
+    `
+})
 
-            
+Vue.component('cart-form', {
+    props: [`goods`],
+    data:()=>({
+        searchLine: '',
+        isVisibleCart: false
+    }),
+    methods: {
+        cartVisibility(){
+            this.isVisibleCart = !this.isVisibleCart;
+        }
+    },
+    template: `
+        <form id="cart-form" class="cart-form" action="">
+                <input type="button" name="cart-button" class="cart-button" @click="cartVisibility">
+                <transition name="fade">
+                    <span class="total-price" v-if="!isVisibleCart">0</span>
+                    <div class="cart-block" v-if="isVisibleCart"></div>
+                </transition>
+            </form>
+    `
+})
+
+const app = new Vue({
+    el: '#app',
+    data: {
+        goods: [],
+        filteredGoods: [],
+        searchLine: '',
+        isVisibleCart: false,
+    },
+    computed: {
+        searchLineTest(){
+            return this.searchLine + " test"
+        },
+        filteredGoodsHandler(){
+            // return  this.goods.filter((good) => {
+            //         return regexp.test(good.product_name);
+            //     });
+            return debounce((event)=>{
+                const regexp = new RegExp(event.target.value.trim(), 'i');
+                console.dir(event.target.value)
+                this.filteredGoods = this.goods.filter((good) => {
+                    return regexp.test(good.product_name);
+                });
+            },300)
         }
     },
     methods: {
@@ -106,6 +187,7 @@ const app = new Vue({
         //         return regexp.test(good.product_name);
         //     });
         // }
+        
     },
     mounted() { //приложение монтируется
         this.fetchGoods();

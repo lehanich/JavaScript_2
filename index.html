@@ -12,6 +12,8 @@
 <body>
 <div id="app">
     <!--{{ searchLineTest }}-->
+    <input type="search" class="search-button" v-model.trim="searchLine" ><!--@input="filteredGoodsHandler"-->
+
     <!-- <input type="text" v-model="name"/>
      v-if="name.length !== 0"
     
@@ -26,21 +28,12 @@
     </ul>
         <div class="header-icons" >
             <!--@submit.prevent="filterGoods"-->
-            <form id="searchForm" action=""><input type="search" class="search-button" @input="filteredGoodsHandler" v-model.trim="searchLine"></form>
-            <form id="cart-form" class="cart-form" action=""><input type="button" name="cart-button" class="cart-button"><span class="total-price">0</span><div class="cart-block"></div></form>
+            <search-form :goods="filteredGoods"></search-form>
+            <cart-form :goods="filteredGoods"></cart-form>
         </div>
     </header>
     <main class="container">
-        <div class="goods-list" >
-            <div class="goods-item" v-for="good in filteredGoods" :key="good.product_name" :data-id="good.id_product" >
-                <div class="pImage">
-                    <img src="https://via.placeholder.com/250" alt="alt">
-                </div>
-                <h3>{{ good.product_name }}</h3>
-                <p class="price">{{ good.price }}</p>
-                <button name="btn-buy" :data-id="good.id_product"  class="js-add-to-cart btn-buy">Добавить</button>
-            </div>
-        </div>
+        <goods-list :goods="filteredGoods" /> 
     </main>
     <footer class="container">
 
