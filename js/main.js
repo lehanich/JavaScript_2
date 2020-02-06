@@ -59,25 +59,10 @@ Vue.component('search-form', {
 
     }),
     computed: {
-        searchLineTest(){
-            return this.searchLine + " test"
-        },
-        filteredGoodsHandler(){
-            // return  this.goods.filter((good) => {
-            //         return regexp.test(good.product_name);
-            //     });
-            return debounce((event)=>{
-                const regexp = new RegExp(event.target.value.trim(), 'i');
-                console.dir(event.target.value)
-                this.filteredGoods = this.goods.filter((good) => {
-                    return regexp.test(good.product_name);
-                });
-            },300)
-        }
     },
     template:`
         <form id="searchForm" action=""><!-- Test Computed <h2>{{ searchLineTest }}</h2>-->
-                <input type="search" class="search-button" @input="filteredGoodsHandler" >
+                <input type="search" class="search-button" @input="$emit('input', $event.target.value)"  >
         </form><!--@input="filteredGoodsHandler" v-model.trim="searchLine" -->
     `
 })
@@ -114,7 +99,18 @@ const app = new Vue({
         isVisibleCart: false,
     },
     computed: {
-
+        filteredGoodsHandler(){
+            // return  this.goods.filter((good) => {
+            //         return regexp.test(good.product_name);
+            //     });
+            return debounce((event)=>{
+                const regexp = new RegExp(this.searchLine.trim(), 'i');//event.target.value
+                console.dir(this.searchLine)
+                this.filteredGoods = this.goods.filter((good) => {
+                    return regexp.test(good.product_name);
+                });
+            },300)
+        }
     },
     methods: {
         // filteredGoodsHandler(){

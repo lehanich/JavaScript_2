@@ -25,7 +25,7 @@
     </ul>
         <div class="header-icons" >
             <!--@submit.prevent="filterGoods"-->
-            <search-form :goods="filteredGoods"></search-form>
+            <search-form :goods="filteredGoods" @input="filteredGoodsHandler" v-model="searchLine"></search-form>
             <cart-form :goods="filteredGoods"></cart-form>
         </div>
     </header>
