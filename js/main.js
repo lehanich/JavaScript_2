@@ -82,6 +82,7 @@ Vue.component('search-form', {
     `
 })
 
+
 Vue.component('cart-form', {
     props: [`goods`],
     data:()=>({
