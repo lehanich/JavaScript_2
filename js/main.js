@@ -21,6 +21,13 @@ function debounce(callback,wait, immediate){
 
 Vue.component('goods-item', {
     props: ['good'],
+    methods:{
+        addToCart(e){
+            //console.dir(e.target)
+            console.log("goods-item: add to cart")
+            this.$emit('add-To-Cart', e.target.dataset.id)
+        }
+    },
     template: `
         <div class="goods-item"  >
                 <div class="pImage">
@@ -28,7 +35,7 @@ Vue.component('goods-item', {
                 </div>
                 <h3>{{ good.product_name }}</h3>
                 <p class="price">{{ good.price }}</p>
-                <button name="btn-buy" :data-id="good.id_product"  class="js-add-to-cart btn-buy">Добавить</button>
+                <button @click="addToCart($event)" name="btn-buy" :data-id="good.id_product"  class="js-add-to-cart btn-buy">Добавить</button>
         </div>
     `
 });
@@ -40,9 +47,16 @@ Vue.component('goods-list', {
             return this.goods.length === 0;
         },
     },
+    methods: {
+        addToCart(id){
+            console.log("goods-list: add to cart")
+            console.log("goods-list: " + id)
+            this.$emit('add-to-cart', id)
+        }
+    },
     template:`
         <div class="goods-list" >
-            <goods-item v-for="good in goods" :key="good.id_product" :data-id="good.id_product" :good="good"></goods-item>
+            <goods-item v-for="good in goods" :key="good.id_product" :data-id="good.id_product" :good="good" @add-To-Cart="addToCart"></goods-item>
         
             <div class="goods-not-found" v-if="isFilteredGoodsEmpty" >
                 <h3>Нет данных</h3>
@@ -56,7 +70,6 @@ Vue.component('search-form', {
     props: [`goods`],
     data:()=>({
         searchLine: '',
-
     }),
     computed: {
     },
@@ -72,11 +85,17 @@ Vue.component('cart-form', {
     props: [`goods`],
     data:()=>({
         searchLine: '',
-        isVisibleCart: false
+        isVisibleCart: false,
+        cartItems: [],
     }),
     methods: {
         cartVisibility(){
             this.isVisibleCart = !this.isVisibleCart;
+            console.log(this.goods)
+        },
+        addToCart(id){
+            cartItems.push(id)
+            console.log(cartItems)
         }
     },
     template: `
@@ -84,7 +103,11 @@ Vue.component('cart-form', {
                 <input type="button" name="cart-button" class="cart-button" @click="cartVisibility">
                 <transition name="fade">
                     <span class="total-price" v-if="!isVisibleCart">0</span>
-                    <div class="cart-block" v-if="isVisibleCart"></div>
+                    <div class="cart-block" v-if="isVisibleCart">
+                        <div v-for="good in goods">
+                            {{good}}
+                        </div>
+                    </div>
                 </transition>
             </form>
     `
@@ -108,6 +131,7 @@ const app = new Vue({
         searchLine: '',
         isVisibleCart: false,
         msgError: '',
+        filteredGoodsCart: [],
     },
     computed: {
         filteredGoodsHandler(){
@@ -124,6 +148,9 @@ const app = new Vue({
         },
         visibleError(){
             return this.msgError.length !== 0
+        },
+        filteredGoodsCartHandler(){
+            return this.filteredGoodsCart
         }
     },
     methods: {
@@ -177,6 +204,11 @@ const app = new Vue({
             // console.log(test)
             
             setTimeout(() => this.msgError = "" , 3000);
+        },
+        addToCart(id) {
+            console.log("app: add to cart")
+            this.filteredGoodsCart.push(id)
+            console.log(this.filteredGoodsCart)
         }
         
     },
