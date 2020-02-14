@@ -1,4 +1,5 @@
-const API_URL = "https://raw.githubusercontent.com/GeekBrainsTutorial/online-store-api/master/responses";
+//const API_URL = "https://raw.githubusercontent.com/GeekBrainsTutorial/online-store-api/master/responses";
+const API_URL = "/data/"
 
 function debounce(callback,wait, immediate){
     let timeout;
@@ -24,9 +25,9 @@ Vue.component('goods-item', {
     template: `
         <div class="goods-item"  >
                 <div class="pImage">
-                    <img src="https://via.placeholder.com/250" alt="alt">
+                    <img :src="good.img" alt="alt">
                 </div>
-                <h3>{{ good.product_name }}</h3>
+                <h3>{{ good.name }}</h3>
                 <p class="price">{{ good.price }}</p>
                 <button name="btn-buy" :data-id="good.id_product"  class="js-add-to-cart btn-buy">Добавить</button>
         </div>
@@ -53,17 +54,31 @@ Vue.component('goods-list', {
 });
 
 Vue.component('search-form', {
-    props: [`goods`],
+    props: [`goods`, `filteredGoods`],
     data:()=>({
         searchLine: '',
 
     }),
     computed: {
+        filteredGoodsHandler(){
+            // return  this.goods.filter((good) => {
+            //         return regexp.test(good.product_name);
+            //     });
+            return debounce((event)=>{
+                console.dir(event.target.value)
+                const regexp = new RegExp(event.target.value.trim(), 'i');//event.target.value
+                const filteredGoods = this.goods.filter((good) => {
+                    return regexp.test(good.name);
+                });
+                console.dir(filteredGoods)
+                this.$emit('update.filteredGoods', filteredGoods)
+            },300)
+        },
     },
     template:`
         <form id="searchForm" action=""><!-- Test Computed <h2>{{ searchLineTest }}</h2>-->
-                <input type="search" class="search-button" @input="$emit('input', $event.target.value)"  >
-        </form><!--@input="filteredGoodsHandler" v-model.trim="searchLine" -->
+                <input type="search" class="search-button" @input="filteredGoodsHandler"   >
+        </form><!--@input="filteredGoodsHandler" @input="$emit('input', $event.target.value)" v-model.trim="searchLine" -->
     `
 })
 
@@ -90,42 +105,41 @@ Vue.component('cart-form', {
     `
 })
 
-Vue.component('alert-window', {
+ Vue.component('alert-window', {
     props: {
-        message: "",
+        error: "",
         isVisible: false,
+        wait: 5000
+    },
+    computed:{
+        showEr(){
+            return this.error != null && this.error != ""
+        }
+    },
+    methods: {
+        showError(error){
+            console.dir(error)
+            this.error = error          
+            setTimeout(() => this.clear() , this.wait);
+        },
+        clear(){
+            this.error = null
+        }
+
     },
     template:`
-        <div class="allertMessage">Ошибка: <slot></slot></div>
+        <transition name="fade">
+            <div class="allertMessage" v-if="showEr">Ошибка: {{ error.message }}</div>
+        </transition>
     `
 })
 
-const app = new Vue({
-    el: '#app',
-    data: {
+const homePage = Vue.component('home-page', {
+    template:` <goods-list :goods="filteredGoods" />  `,
+    data: () => ({
         goods: [],
         filteredGoods: [],
-        searchLine: '',
-        isVisibleCart: false,
-        msgError: '',
-    },
-    computed: {
-        filteredGoodsHandler(){
-            // return  this.goods.filter((good) => {
-            //         return regexp.test(good.product_name);
-            //     });
-            return debounce((event)=>{
-                const regexp = new RegExp(this.searchLine.trim(), 'i');//event.target.value
-                console.dir(this.searchLine)
-                this.filteredGoods = this.goods.filter((good) => {
-                    return regexp.test(good.product_name);
-                });
-            },300)
-        },
-        visibleError(){
-            return this.msgError.length !== 0
-        }
-    },
+    }),
     methods: {
         makeGetRequest(url) {
             return new Promise((resolve, reject) => {
@@ -157,31 +171,81 @@ const app = new Vue({
         },
         async fetchGoods() {//callback
             try{
-                this.goods = await this.makeGetRequest(`${API_URL}/catalogData.json`) //async makeGetRequest
+                this.goods = await this.makeGetRequest(`/api/goods`) //async makeGetRequest  `${API_URL}catalog.json`
                 this.filteredGoods = [...this.goods]
             }catch(e){
                 //console.error(e)
-                this.showError("Нет соединения с сервером")
+                this.$refs.notification.showError(new Error(e))
+                //this.showError("Нет соединения с сервером")
             }
 
         },
-        showError(){
-            this.msgError = "Нет соединения с сервером"
-
-            //  debounce(()=>{
-            //     console.log("test")
-            //     this.msgError = ""
-            //     console.log(this.msgError)
-            // }, 3000)
-            // console.log(this.msgError)
-            // console.log(test)
-            
-            setTimeout(() => this.msgError = "" , 3000);
-        }
+        
         
     },
     mounted() { //приложение монтируется
-        this.fetchGoods();
+        this.$nextTick(() => {
+            this.fetchGoods();
+        })   
     }
+})
+
+const contactPage = Vue.component('contact-page', {
+    template: `<h1>Контакты</h1>`
+})
+
+const routes = [
+    {
+        name: 'home',
+        path: "/",
+        component: homePage
+    },
+    {
+        name: 'contacts',
+        path: "/contacts",
+        component: contactPage
+    }
+];
+
+const router = new VueRouter({
+    mode: `history`, //убирает /#/ в адресе в браузере
+    routes
+})
+
+const store = new Vuex.Store({
+    state: {},
+    getters: {},
+    mutations: {},
+    actions: {},
+})
+
+const app = new Vue({
+    el: '#app',
+    router,
+    data: {
+        goods: [],
+        filteredGoods: [],
+        searchLine: '',
+        isVisibleCart: false,
+        msgError: '',
+    },
+    computed: {
+        filteredGoodsHandler(){
+            // return  this.goods.filter((good) => {
+            //         return regexp.test(good.product_name);
+            //     });
+            return debounce((event)=>{
+                const regexp = new RegExp(this.searchLine.trim(), 'i');//event.target.value
+                console.dir(this.searchLine)
+                this.filteredGoods = this.goods.filter((good) => {
+                    return regexp.test(good.product_name);
+                });
+            },300)
+        },
+        visibleError(){
+            return this.msgError.length !== 0
+        }
+    },
+    
 
 })

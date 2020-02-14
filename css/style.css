@@ -58,20 +58,24 @@ header {
     float: right;
     margin: 23px 0;
 }
-.menu li {
+.menu a {
     float: left;
     font-size: 1.3em;
     font-family: sans-serif;
     list-style-type: none;
     padding:5px;
     line-height: 45px;
-}
-.menu li a {
     color: royalblue;
 }
 
-.menu li a:hover {
+.menu  a:hover {
     color: firebrick;
+}
+.menu  a:hover {
+    color: firebrick;
+}
+.menu  a.router-link-exact-active {
+    font-weight: bold;
 }
 .header-icons {
     display: flex;

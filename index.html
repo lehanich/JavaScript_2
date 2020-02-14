@@ -19,27 +19,27 @@
      -->
     <header class="container">
         <img class="logo" src="https://via.placeholder.com/200x70" alt="logo">
-        <ul class="menu">
-            <li><a href="#">Каталог</a></li>
-            <li><a href="#">Контакты</a></li>
-    </ul>
+        <nav class="menu">
+            <router-link to="/" >Каталог</router-link>
+            <router-link to="/contacts">Контакты</router-link>
+        </nav>
         <div class="header-icons" >
             <!--@submit.prevent="filterGoods"-->
-            <search-form :goods="filteredGoods" @input="filteredGoodsHandler" v-model="searchLine"></search-form>
+            <search-form :goods="goods" :filtered-goods.sync="filteredGoods"  ></search-form><!--@input="filteredGoodsHandler" v-model="searchLine"-->
             <cart-form :goods="filteredGoods"></cart-form>
         </div>
     </header>
     <main class="container">
-        <goods-list :goods="filteredGoods" /> 
+        <router-view></router-view>
+        <!--<goods-list :goods="filteredGoods" /> -->
     </main>
     <footer class="container">
 
     </footer>
-    <transition name="fade">
-        <alert-window v-if="visibleError">{{ msgError }}</alert-window>
-    </transition>
+    <alert-window ref="notification" ></alert-window>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
