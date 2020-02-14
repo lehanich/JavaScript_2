@@ -20,6 +20,35 @@ function debounce(callback,wait, immediate){
     }
 }
 
+function makeGetRequest(url) {
+    return new Promise((resolve, reject) => {
+        let xhr;
+        if (window.XMLHttpRequest) {
+            xhr = new window.XMLHttpRequest();
+        } else  {
+            xhr = new window.ActiveXObject("Microsoft.XMLHTTP")
+        }
+            
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status !== 200){
+                    reject(xhr.responceText)
+                }
+            
+                const body = JSON.parse(xhr.responseText)
+                resolve(body)
+    
+            }
+        };
+        xhr.onerror = function(err){
+            reject(err)
+        }
+        xhr.open('GET', url);
+        xhr.send();
+
+    })
+}
+
 Vue.component('goods-item', {
     props: ['good'],
     template: `
@@ -138,55 +167,17 @@ const homePage = Vue.component('home-page', {
     template:` <goods-list :goods="filteredGoods" />  `,
     data: () => ({
         goods: [],
-        filteredGoods: [],
     }),
-    methods: {
-        makeGetRequest(url) {
-            return new Promise((resolve, reject) => {
-                let xhr;
-                if (window.XMLHttpRequest) {
-                    xhr = new window.XMLHttpRequest();
-                } else  {
-                    xhr = new window.ActiveXObject("Microsoft.XMLHTTP")
-                }
-                    
-                xhr.onreadystatechange = function () {
-                    if (xhr.readyState === 4) {
-                        if (xhr.status !== 200){
-                            reject(xhr.responceText)
-                        }
-                    
-                        const body = JSON.parse(xhr.responseText)
-                        resolve(body)
-            
-                    }
-                };
-                xhr.onerror = function(err){
-                    reject(err)
-                }
-                xhr.open('GET', url);
-                xhr.send();
-        
-            })
-        },
-        async fetchGoods() {//callback
-            try{
-                this.goods = await this.makeGetRequest(`/api/goods`) //async makeGetRequest  `${API_URL}catalog.json`
-                this.filteredGoods = [...this.goods]
-            }catch(e){
-                //console.error(e)
-                this.$refs.notification.showError(new Error(e))
-                //this.showError("Нет соединения с сервером")
-            }
-
-        },
-        
-        
+    computed: {
+        filteredGoods() {
+            return this.$store.state.filteredGoods
+        }
     },
     mounted() { //приложение монтируется
-        this.$nextTick(() => {
-            this.fetchGoods();
-        })   
+        this.$store.dispatch('fetchGoods')
+        //this.$nextTick(() => {
+        //     this.fetchGoods();
+        //})   
     }
 })
 
@@ -213,37 +204,74 @@ const router = new VueRouter({
 })
 
 const store = new Vuex.Store({
-    state: {},
-    getters: {},
-    mutations: {},
-    actions: {},
+    state: {
+        goods: [],
+        filteredGoods: [],
+    },
+    getters: {
+        filteredGoods(state){
+            return state.filteredGoods
+        }
+
+    },
+    mutations: {
+        SET_GOODS(state, goods){
+            state.goods = goods
+            state.filteredGoods = goods
+        },
+        SET_FILTERED_GOODS(state, filteredGoods){
+            state.filteredGoods = filteredGoods
+        }
+    },
+    actions: {
+        async fetchGoods(context) {//callback
+            try{
+                goods = await makeGetRequest(`/api/goods`) //async makeGetRequest  `${API_URL}catalog.json`
+                context.commit('SET_GOODS', goods)
+            }catch(e){
+                console.error(e)
+                //this.$refs.notification.showError(new Error(e)) //??? life cicle ???
+            }
+
+        },
+    },
 })
 
 const app = new Vue({
     el: '#app',
     router,
+    store,
     data: {
-        goods: [],
-        filteredGoods: [],
         searchLine: '',
         isVisibleCart: false,
         msgError: '',
     },
     computed: {
-        filteredGoodsHandler(){
-            // return  this.goods.filter((good) => {
-            //         return regexp.test(good.product_name);
-            //     });
-            return debounce((event)=>{
-                const regexp = new RegExp(this.searchLine.trim(), 'i');//event.target.value
-                console.dir(this.searchLine)
-                this.filteredGoods = this.goods.filter((good) => {
-                    return regexp.test(good.product_name);
-                });
-            },300)
-        },
+        // filteredGoodsHandler(){
+        //     // return  this.goods.filter((good) => {
+        //     //         return regexp.test(good.product_name);
+        //     //     });
+        //     return debounce((event)=>{
+        //         const regexp = new RegExp(this.searchLine.trim(), 'i');//event.target.value
+        //         console.dir(this.searchLine)
+        //         this.filteredGoods = this.goods.filter((good) => {
+        //             return regexp.test(good.product_name);
+        //         });
+        //     },300)
+        // },
         visibleError(){
             return this.msgError.length !== 0
+        },
+        goods() {
+            return this.$store.state.goods
+        },
+        filteredGoods: {
+            get(){
+                return this.$store.state.filteredGoods
+            },
+            set(newGoods){
+                return this.$store.commit('SET_FILTERED_GOODS',newGoods)
+            }
         }
     },
     
