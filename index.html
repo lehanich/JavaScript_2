@@ -26,7 +26,7 @@
         <div class="header-icons" >
             <!--@submit.prevent="filterGoods"-->
             <search-form :goods="goods" :filtered-goods.sync="filteredGoods"  ></search-form><!--@input="filteredGoodsHandler" v-model="searchLine"-->
-            <cart-form :goods="filteredGoods"></cart-form>
+            <cart-form :cartItems.sync="cartItems"></cart-form>
         </div>
     </header>
     <main class="container">

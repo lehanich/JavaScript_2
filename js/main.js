@@ -20,7 +20,7 @@ function debounce(callback,wait, immediate){
     }
 }
 
-function makeGetRequest(url) {
+function makeGetRequest(url,method) {
     return new Promise((resolve, reject) => {
         let xhr;
         if (window.XMLHttpRequest) {
@@ -43,14 +43,53 @@ function makeGetRequest(url) {
         xhr.onerror = function(err){
             reject(err)
         }
-        xhr.open('GET', url);
+        xhr.open(method, url);
         xhr.send();
+
+    })
+}
+
+function makePostRequest(url,method,data) {
+    return new Promise((resolve, reject) => {
+        let xhr;
+        if (window.XMLHttpRequest) {
+            xhr = new window.XMLHttpRequest();
+        } else  {
+            xhr = new window.ActiveXObject("Microsoft.XMLHTTP")
+        }
+            
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status !== 200){
+                    reject(xhr.responceText)
+                }
+            
+                const body = JSON.parse(xhr.responseText)
+                resolve(body)
+    
+            }
+        };
+        xhr.onerror = function(err){
+            reject(err)
+        }
+        xhr.open(method, url);
+        xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+        xhr.send(JSON.stringify(data));
 
     })
 }
 
 Vue.component('goods-item', {
     props: ['good'],
+    methods: {
+        buyProduct(input){
+            console.dir(input)
+            this.$store.dispatch({
+                type: 'addItemToCart',
+                cartItemId: input.target.dataset.id
+            })
+        }
+    },
     template: `
         <div class="goods-item"  >
                 <div class="pImage">
@@ -58,7 +97,7 @@ Vue.component('goods-item', {
                 </div>
                 <h3>{{ good.name }}</h3>
                 <p class="price">{{ good.price }}</p>
-                <button name="btn-buy" :data-id="good.id_product"  class="js-add-to-cart btn-buy">Добавить</button>
+                <button name="btn-buy" :data-id="good.id" @click="buyProduct($event)" class="js-add-to-cart btn-buy">Добавить</button>
         </div>
     `
 });
@@ -118,6 +157,12 @@ Vue.component('cart-form', {
         searchLine: '',
         isVisibleCart: false
     }),
+    computed: {
+        cartItems(){
+            console.dir(this.$store.state.cartItems)
+            return this.$store.state.cartItems
+        }
+    },
     methods: {
         cartVisibility(){
             this.isVisibleCart = !this.isVisibleCart;
@@ -128,7 +173,19 @@ Vue.component('cart-form', {
                 <input type="button" name="cart-button" class="cart-button" @click="cartVisibility">
                 <transition name="fade">
                     <span class="total-price" v-if="!isVisibleCart">0</span>
-                    <div class="cart-block" v-if="isVisibleCart"></div>
+                    <div class="cart-block" v-if="isVisibleCart">
+                        <div class="cart-item" v-for="cartItem in cartItems" :key="cartItem.id">
+                            <div class="cart-image">
+                                <img  :src="cartItem.img" :alt="cartItem.name">
+                            </div>
+                            <div class="cart-info">
+                                <span class="cart-info-name">{{cartItem.name}}</span>
+                                <i>{{cartItem.price}}</i> x 
+                                <i>{{cartItem.count}}</i>шт
+                            </div>
+                            <input type="button" class="btn-del" name="btn-del" :data-product="cartItem.id" value="Del">
+                        </div>
+                    </div>
                 </transition>
             </form>
     `
@@ -171,10 +228,12 @@ const homePage = Vue.component('home-page', {
     computed: {
         filteredGoods() {
             return this.$store.state.filteredGoods
-        }
+        },
+        
     },
     mounted() { //приложение монтируется
         this.$store.dispatch('fetchGoods')
+        this.$store.dispatch('getCart')
         //this.$nextTick(() => {
         //     this.fetchGoods();
         //})   
@@ -207,10 +266,14 @@ const store = new Vuex.Store({
     state: {
         goods: [],
         filteredGoods: [],
+        cartItems: [],
     },
     getters: {
         filteredGoods(state){
             return state.filteredGoods
+        },
+        cartItems(state){
+            return state.cartItems
         }
 
     },
@@ -221,12 +284,26 @@ const store = new Vuex.Store({
         },
         SET_FILTERED_GOODS(state, filteredGoods){
             state.filteredGoods = filteredGoods
+        },
+        SET_CART(state, cartItems){
+            state.cartItems = cartItems
+            console.dir(state.cartItems)
+        },
+        ADD_ITEM_TO_CART(state, cartItem){
+            let findId = state.cartItems.findIndex(good => good.id === cartItem.id);
+            console.log(findId)
+            if(findId<0){
+                findId = state.cartItems.push(cartItem)
+                findId--
+            }
+            state.cartItems[findId].count ++
+            console.log(state.cartItems)
         }
     },
     actions: {
         async fetchGoods(context) {//callback
             try{
-                goods = await makeGetRequest(`/api/goods`) //async makeGetRequest  `${API_URL}catalog.json`
+                goods = await makeGetRequest(`/api/goods`, 'GET') //async makeGetRequest  `${API_URL}catalog.json`
                 context.commit('SET_GOODS', goods)
             }catch(e){
                 console.error(e)
@@ -234,6 +311,38 @@ const store = new Vuex.Store({
             }
 
         },
+        async getCart(context) {//callback
+            try{
+                cartItems = await makeGetRequest(`/api/cart`, 'POST') //async makeGetRequest  `${API_URL}catalog.json`
+                context.commit('SET_CART', cartItems)
+                console.dir(cartItems)
+            }catch(e){
+                console.error(e)
+                //this.$refs.notification.showError(new Error(e)) //??? life cicle ???
+            }
+
+        },
+        async addItemToCart(context,cartItemId) {
+            console.dir(cartItemId.cartItemId)
+            //console.dir({commit})
+            console.log(this.state.goods)
+            console.log(this.state.cartItems)
+            try{
+                let findId = this.state.goods.findIndex(good => good.id == cartItemId.cartItemId);
+                console.log(findId)
+                if(findId>=0){
+                    context.commit('ADD_ITEM_TO_CART', this.state.goods[findId])
+                    console.dir(this.state.cartItems)
+                    cartItems = await makePostRequest(`/api/cart`, 'POST' , this.state.cartItems) //async makeGetRequest  `${API_URL}catalog.json`
+                    //context.commit('ADD_ITEM_TO_CART', cartItems)
+                    console.dir(cartItems)
+                }
+                
+            }catch(e){
+                console.error(e)
+                //this.$refs.notification.showError(new Error(e)) //??? life cicle ???
+            }
+        }
     },
 })
 
@@ -271,6 +380,14 @@ const app = new Vue({
             },
             set(newGoods){
                 return this.$store.commit('SET_FILTERED_GOODS',newGoods)
+            }
+        },
+        cartItems: {
+            get(){
+                return this.$store.state.cartItems
+            },
+            set(newCartItems){
+                return this.$store.commit('SET_CART',newCartItems)
             }
         }
     },

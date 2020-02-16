@@ -27,29 +27,42 @@ app.use(express.static('.'))
 app.use(bodyParser.json())
 
 app.get('/api/goods', (req,res) => {
-    console.log("catalog")
+    console.log("read catalog")
     fs.readFile("./data/catalog.json","utf-8", (req,data) => {
         res.send(data)
     })
 })
 
 app.post('/api/cart', (req,res) => {
-    fs.readFile("./data/cart.json","utf-8", (req,data) => {
-        const cart = JSON.parse(data)
-        const goodItem = req.body;
-
-        cart.push(goodItem)
-        fs.writeFile('./data/cart.json',JSON.stringify(cart), (err) =>{
-            if(err){
-                res.status(500).send()
-                return
+    console.log("read cart")
+    if (req ===null)
+        fs.readFile("./data/cart.json","utf-8", (req,data) => {
+            console.dir(req)
+            if(req === null){
+                res.send(data)
             }else{
-                res.send(cart)
+                console.dir(req.body)
+                console.dir(data)
+                const cart = JSON.parse(data)
+                console.dir(req)
+                const goodItem = req.body;
+                console.dir(goodsItem)
+                cart.push(goodItem)
+                fs.writeFile('./data/cart.json',JSON.stringify(cart), (err) =>{
+                    if(err){
+                        res.status(500).send()
+                        return
+                    }else{
+                        res.send(cart)
+                    }
+                })
             }
         })
-    })
+    }else{
+        
+    }
 })
 
-app.listen(3000,() => {
+app.listen(3030,() => {
     console.log("run server")
 })

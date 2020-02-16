@@ -1,1 +1,6 @@
-[]
+[
+        { "id": 1, "name": "Мышка", "price": 100 , "count": 1,
+        "img": "https://via.placeholder.com/50"},
+        { "id": 2, "name": "Клавиатура", "price": 200 , "count": 1,
+        "img": "https://via.placeholder.com/50"}
+]
